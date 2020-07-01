@@ -1,7 +1,12 @@
 use base64::encode;
 use clap::ArgMatches;
+use dirs::home_dir;
+use reqwest;
 use reqwest::blocking::Client;
-use reqwest::{header, Result};
+use reqwest::header;
+use std::error::Error;
+use std::fs::{create_dir_all, File};
+use std::io::prelude::*;
 
 /// Represents data required for authentication.
 #[derive(Debug)]
@@ -22,14 +27,14 @@ impl From<&ArgMatches> for AuthData {
 }
 
 /// Verifies and saves the user's authentication credentials
-pub fn authenticate(auth_data: AuthData) -> Result<()> {
+pub fn authenticate(auth_data: AuthData) -> Result<(), Box<dyn Error>> {
     test_auth_data(&auth_data)?;
     save_auth_data(&auth_data)?;
     Ok(())
 }
 
 /// Attempts an API call to verify the correctness of the provided Auth data
-fn test_auth_data(auth_data: &AuthData) -> Result<()> {
+fn test_auth_data(auth_data: &AuthData) -> reqwest::Result<()> {
     let mut headers = header::HeaderMap::new();
 
     let auth_token = encode(format!("{}:{}", auth_data.email, auth_data.token));
@@ -49,6 +54,14 @@ fn test_auth_data(auth_data: &AuthData) -> Result<()> {
         .map(|_| ())
 }
 
-fn save_auth_data(auth_data: &AuthData) -> Result<()> {
+/// Saves the given auth data to the user's home directory
+fn save_auth_data(auth_data: &AuthData) -> Result<(), Box<dyn Error>> {
+    let mut home = home_dir().ok_or("Couldn't find home directory")?;
+    home.push(".jira");
+    create_dir_all(&home)?;
+    let mut file = File::create(home.join("jira_auth"))?;
+    writeln!(file, "{}", auth_data.domain)?;
+    writeln!(file, "{}", auth_data.email)?;
+    writeln!(file, "{}", auth_data.token)?;
     Ok(())
 }
