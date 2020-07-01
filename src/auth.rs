@@ -5,7 +5,7 @@ use reqwest;
 use reqwest::blocking::Client;
 use reqwest::header;
 use std::error::Error;
-use std::fs::{create_dir_all, File};
+use std::fs::{create_dir_all, read_to_string, File};
 use std::io::prelude::*;
 
 /// Represents data required for authentication.
@@ -31,6 +31,22 @@ pub fn authenticate(auth_data: AuthData) -> Result<(), Box<dyn Error>> {
     test_auth_data(&auth_data)?;
     save_auth_data(&auth_data)?;
     Ok(())
+}
+
+/// Returns the currently saved auth data
+pub fn get_auth_data() -> Result<AuthData, Box<dyn Error>> {
+    let mut home = home_dir().ok_or("Couldn't find home directory")?;
+    home.push(".jira");
+    let auth_file_contents = read_to_string(home.join("jira_auth"))?;
+    let mut lines = auth_file_contents.lines();
+
+    let read_error = "Invalid auth file. Please run jira auth to fix.";
+
+    Ok(AuthData {
+        domain: String::from(lines.next().ok_or(read_error)?),
+        email: String::from(lines.next().ok_or(read_error)?),
+        token: String::from(lines.next().ok_or(read_error)?),
+    })
 }
 
 /// Attempts an API call to verify the correctness of the provided Auth data
