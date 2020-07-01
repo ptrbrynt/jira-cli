@@ -1,15 +1,20 @@
+extern crate base64;
 extern crate clap;
+extern crate reqwest;
 
 mod auth;
 
 use auth::{authenticate, AuthData};
 use clap::{App, Arg, ArgMatches};
+use reqwest::Result;
 
-fn main() {
+fn main() -> Result<()> {
     let matches = get_matches();
 
     if let ("auth", Some(sub)) = matches.subcommand() {
         authenticate(AuthData::from(sub))
+    } else {
+        Ok(())
     }
 }
 
