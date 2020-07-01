@@ -1,5 +1,6 @@
 use base64::encode;
 use clap::ArgMatches;
+use clap::{App, Arg};
 use dirs::home_dir;
 use reqwest;
 use reqwest::blocking::Client;
@@ -29,6 +30,36 @@ impl From<&ArgMatches> for AuthData {
             token: String::from(matches.value_of("token").unwrap_or_default()),
         }
     }
+}
+
+pub fn auth_subcommand<'a>() -> App<'a> {
+    App::new("auth")
+        .alias("a")
+        .about("Authenticate Jira CLI with your Jira account")
+        .arg(
+            Arg::with_name("domain")
+                .about("Your Jira domain e.g. myteam.atlassian.net")
+                .required(true)
+                .short('d')
+                .long("domain")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("email")
+                .about("Your Jira email address")
+                .required(true)
+                .short('e')
+                .long("email")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("token")
+                .about("Your API token. You can generate one in your Jira account.")
+                .required(true)
+                .short('t')
+                .long("token")
+                .takes_value(true),
+        )
 }
 
 /// Verifies and saves the user's authentication credentials
