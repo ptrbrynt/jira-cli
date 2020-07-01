@@ -8,6 +8,11 @@ use std::error::Error;
 use std::fs::{create_dir_all, read_to_string, File};
 use std::io::prelude::*;
 
+const JIRA_DIR: &str = ".jira";
+const AUTH_FILE_NAME: &str = "jira_auth";
+const MISSING_HOME_ERROR: &str = "Couldn't find home directory";
+const READ_ERROR: &str = "Invalid auth file. Please run jira auth to fix.";
+
 /// Represents data required for authentication.
 #[derive(Debug)]
 pub struct AuthData {
@@ -35,17 +40,15 @@ pub fn authenticate(auth_data: AuthData) -> Result<(), Box<dyn Error>> {
 
 /// Returns the currently saved auth data
 pub fn get_auth_data() -> Result<AuthData, Box<dyn Error>> {
-    let mut home = home_dir().ok_or("Couldn't find home directory")?;
-    home.push(".jira");
-    let auth_file_contents = read_to_string(home.join("jira_auth"))?;
+    let mut home = home_dir().ok_or(MISSING_HOME_ERROR)?;
+    home.push(JIRA_DIR);
+    let auth_file_contents = read_to_string(home.join(AUTH_FILE_NAME))?;
     let mut lines = auth_file_contents.lines();
 
-    let read_error = "Invalid auth file. Please run jira auth to fix.";
-
     Ok(AuthData {
-        domain: String::from(lines.next().ok_or(read_error)?),
-        email: String::from(lines.next().ok_or(read_error)?),
-        token: String::from(lines.next().ok_or(read_error)?),
+        domain: String::from(lines.next().ok_or(READ_ERROR)?),
+        email: String::from(lines.next().ok_or(READ_ERROR)?),
+        token: String::from(lines.next().ok_or(READ_ERROR)?),
     })
 }
 
@@ -72,10 +75,10 @@ fn test_auth_data(auth_data: &AuthData) -> reqwest::Result<()> {
 
 /// Saves the given auth data to the user's home directory
 fn save_auth_data(auth_data: &AuthData) -> Result<(), Box<dyn Error>> {
-    let mut home = home_dir().ok_or("Couldn't find home directory")?;
-    home.push(".jira");
+    let mut home = home_dir().ok_or(MISSING_HOME_ERROR)?;
+    home.push(JIRA_DIR);
     create_dir_all(&home)?;
-    let mut file = File::create(home.join("jira_auth"))?;
+    let mut file = File::create(home.join(AUTH_FILE_NAME))?;
     writeln!(file, "{}", auth_data.domain)?;
     writeln!(file, "{}", auth_data.email)?;
     writeln!(file, "{}", auth_data.token)?;
