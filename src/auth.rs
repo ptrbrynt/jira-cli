@@ -2,7 +2,6 @@ use base64::encode;
 use clap::ArgMatches;
 use clap::{App, Arg};
 use dirs::home_dir;
-use reqwest;
 use reqwest::blocking::Client;
 use reqwest::header;
 use std::error::Error;
@@ -12,6 +11,7 @@ use std::io::prelude::*;
 const JIRA_DIR: &str = ".jira";
 const AUTH_FILE_NAME: &str = "jira_auth";
 const MISSING_HOME_ERROR: &str = "Couldn't find home directory";
+#[allow(dead_code)]
 const READ_ERROR: &str = "Invalid auth file. Please run jira auth to fix.";
 
 /// Represents data required for authentication.
@@ -70,6 +70,7 @@ pub fn authenticate(auth_data: AuthData) -> Result<(), Box<dyn Error>> {
 }
 
 /// Returns the currently saved auth data
+#[allow(dead_code)]
 pub fn get_auth_data() -> Result<AuthData, Box<dyn Error>> {
     let mut home = home_dir().ok_or(MISSING_HOME_ERROR)?;
     home.push(JIRA_DIR);
